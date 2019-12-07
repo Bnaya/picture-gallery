@@ -5,7 +5,7 @@ This is a work in progress 🚧
 
 I’m using it to practice with new tools and to share photos with friends 🦊 🐶
 
-* See [an example gallery](https://picture-gallery.glitch.me)
+* See [an example gallery](https://pictures.tobbi.co)
 * Here’s a [visualization of the gallery’s state machine](https://xstate.js.org/viz/?gist=18995ef2fca6c1949991f21b1b68c6d0)
 * [Project goals](#goals)
 * Helpful [resources](#resources)
@@ -25,12 +25,15 @@ Here are the basic steps:
 1. Install Node 12.13.1 LTS or newer  
 https://nodejs.org
 
-2. Install GraphicsMagick
+2. Install GraphicsMagick  
 http://www.graphicsmagick.org
 
-3. [Clone this project](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository) with Git (or download it)
+3. Install ImageOptim  
+https://imageoptim.com
 
-4. Add your pictures to the `/_pictures/` folder, grouped by album name
+4. [Clone this project](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository) with Git (or download it)
+
+5. Add your pictures to the `_pictures` folder, grouped by album name
 
 ```
 _pictures/
@@ -46,38 +49,38 @@ _pictures/
             3.jpg
 ```
 
-5. Add information about your gallery and featured albums to `_api/index.json`
+6. Add information about your gallery and featured albums to `_api/index.json`
 
 ```
 {
   "title": "Travel pictures",
   "date": "2016 to 2019",
   "albums": [
-    "japan",
-    "wildflowers"
+    "your-album-name",
+    "your-other-album-name"
   ]
 }
 ```
 
-6. Open your project folder in a terminal and install dependencies:
+7. Open your project folder in a terminal and install dependencies:
 
 ```
 npm install
 ```
 
-7. Create data and [responsive images](https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images)
+8. Create data and [responsive images](https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images)
 
 ```
 npm run create
 ```
 
-8. Start the server
+9. Start the server
 
 ```
 npm start
 ```
 
-9. Visit `http://localhost:5000`
+10. Visit `http://localhost:5000`
 
 To stop the server, press “control C”
 
@@ -127,7 +130,9 @@ Build command
 Publish directory  
 `_site/`
 
-This will automatically rebuild and publish your site as you push changes to your copy of this GitHub repository.
+This will [automatically rebuild and publish your site](https://docs.netlify.com/site-deploys/create-deploys/#deploy-with-git) as you push changes to your copy of this GitHub repository.
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/jimthoburn/picture-gallery)
 
 ### Secret albums
 
@@ -160,6 +165,8 @@ You can also ask search engines not to index your album by setting `hideFromSear
 ```
 
 This will add a [noindex](https://support.google.com/webmasters/answer/93710?hl=en) meta element to your page.
+
+You may also want to make your repository [private](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-repositories), if your gallery is stored in a public place like GitHub.
 
 ### Image file storage
 

@@ -33,7 +33,8 @@ function getAlbumHTML(url) {
       getPageURL,
       album
     });
-    const content = render(AlbumPage({
+    const template = album.albums ? ParentAlbumPage : AlbumPage;
+    const content = render(template({
       getPageURL,
       pictures: album.pictures,
       story: album.story,
@@ -50,6 +51,7 @@ function getAlbumHTML(url) {
       askSearchEnginesNotToIndex:
          album.askSearchEnginesNotToIndex || 
         (album.parent && album.parent.askSearchEnginesNotToIndex),
+      includeClientJS: template === AlbumPage ? true : false,
       openGraphImage:
         openGraphImage && (openGraphImage.indexOf("http") === 0 || config.host) ?
           openGraphImage.indexOf("http") != 0 && config.host
@@ -59,43 +61,6 @@ function getAlbumHTML(url) {
     });
 
     resolve(jsBeautify.html_beautify(html));
-  });
-}
-
-function getGroupAlbumHTML(url) {
-  return new Promise((resolve, reject) => {
-    // console.log("getGroupAlbumHTML");
-    // console.log(url);
-    const album = getAlbum(url);
-
-    // console.log("*** getAlbumHTML");
-    // console.log(url);
-    // console.log("****");
-    // console.log({...album, albums: album.albums.slice(0, 2)});
-
-    // console.log(album);
-    const { title, askSearchEnginesNotToIndex } = album;
-    const content = render(ParentAlbumPage({ parent: album, children: album.albums }));
-    const openGraphImage = getOpenGraphImage({
-      getPageURL: () => url,
-      album: album.albums[0]
-    });
-
-    const renderedHTML = DefaultLayout({
-      title,
-      content,
-      askSearchEnginesNotToIndex,
-      includeClientJS: false,
-      openGraphImage:
-        openGraphImage && (openGraphImage.indexOf("http") === 0 || config.host) ?
-          openGraphImage.indexOf("http") != 0 && config.host
-            ? `${config.host}${openGraphImage}`
-            : openGraphImage
-          : null
-    });
-    const beautifiedHTML = jsBeautify.html_beautify(renderedHTML);
-
-    resolve(beautifiedHTML);
   });
 }
 
@@ -130,10 +95,7 @@ function getSourceByURL(url) {
     } else if (url === "/robots.txt") {
       getRobotsText()
         .then(resolve);
-    } else if (url === "/" || isGroupAlbum(url)) {
-      getGroupAlbumHTML(url)
-        .then(resolve);
-    } else if (isAlbum(url)) {
+    } else if (isAlbum(url) || isGroupAlbum(url)) {
       getAlbumHTML(url)
         .then(resolve);
     } else {

@@ -7,13 +7,13 @@ import { getSource,
          getCoverPicture,
          IMAGE_LIST_SIZES }   from "../helpers/image-source-set.js";
 
-function ParentAlbumPage({ parent, children }) {
+function ParentAlbumPage({ album }) {
 
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
-  // console.log(parent.uri);
-  // console.log(parent);
+  // console.log(album.uri);
+  // console.log(album);
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
@@ -21,19 +21,19 @@ function ParentAlbumPage({ parent, children }) {
   return html`
     <section class="picture-list picture-list__has-captions">
       <h1>
-        ${ parent.title }
-        ${ (parent.parent)
-            ? html` / <a href="${parent.parent.uri == ""
+        ${ album.title }
+        ${ (album.parent)
+            ? html` / <a href="${album.parent.uri == ""
                                   ? "/"
-                                  : `/${parent.parent.uri}/` }">
-                        ${ parent.parent.title }
+                                  : `/${album.parent.uri}/` }">
+                        ${ album.parent.title }
                       </a>`
             : "" }
       </h1>
-      <p> ${ parent.date  }</p>
+      <p> ${ album.date  }</p>
 
       <ol>
-        ${children.map((album, index) => {
+        ${album.albums.map((album, index) => {
           const sourceData = getCoverPicture({album});
           const { picture } = sourceData;
 

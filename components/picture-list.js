@@ -92,7 +92,11 @@ function PictureList({ album, pictures, story, state }) {
       <h1>
         ${ album.title }
         ${ (album.parent)
-            ? html` / <a href="/${ album.parent.uri }/">${ album.parent.title }</a>`
+            ? html` / <a href="${album.parent.uri == ""
+                                  ? "/"
+                                  : `/${album.parent.uri}/` }">
+                        ${ album.parent.title }
+                      </a>`
             : "" }
       </h1>
       ${ (album.date)

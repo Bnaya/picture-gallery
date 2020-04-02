@@ -133,7 +133,5 @@ console.log(chalk.cyan("- - - - - - - - - - - - - - - - - - - - - - -"));
 console.log("⏱️ ", chalk.cyan("Starting server"));
 console.log(chalk.cyan("- - - - - - - - - - - - - - - - - - - - - - -"));
 console.log("");
-getAlbumsByURL().then(albumURLs => {
-  serve(["/", ...albumURLs]);
-});
+getAlbumsByURL().then(serve);
 

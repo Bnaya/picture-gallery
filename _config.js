@@ -34,6 +34,7 @@ export const config = {
     "groupAlbumChildURL"   : "/wildflowers/joshua-tree/",
     "groupAlbumChildName"  : "Joshua Tree",
     "groupAlbumPictureURL" : "/wildflowers/joshua-tree/1/",
+    "groupOfGroupAlbumURL" : "/",
     "secretAlbumURL"       : "/northern-lights/"
   }
 

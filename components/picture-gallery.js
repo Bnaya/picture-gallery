@@ -14,7 +14,7 @@ import { PictureDetails } from "../components/picture-details.js";
 import { actions,
          guards }         from "../machines/gallery-options.js";
 import { getSource,
-         getCoverPhoto }  from "../helpers/image-source-set.js";
+         getCoverPicture }  from "../helpers/image-source-set.js";
 
 
 const GalleryDispatch = createContext(null);
@@ -82,7 +82,8 @@ function PictureGallery({ album, pictures, story, getPageURL }) {
       if (state.event.type === "PICTURE_SELECTED") {
 
         // 🤖 TEST:
-        if (new URLSearchParams(window.location.search).get("test") === "error-after-user-interaction") {
+        if (new URLSearchParams(window.location.search).get("test")
+            === "error-after-user-interaction") {
           throw "Simulating a client-side error after user interaction";
           return;
         }
@@ -156,7 +157,9 @@ function PictureGallery({ album, pictures, story, getPageURL }) {
   }
   
   // 🤖 TEST:
-  if (isBrowser() && new URLSearchParams(window.location.search).get("test") === "error-during-initial-render") {
+  if (isBrowser() && 
+      new URLSearchParams(window.location.search).get("test")
+      === "error-during-initial-render") {
     document.body.innerHTML = "";
     throw "Simulating a client-side error during the initial page render";
     return "";
@@ -208,23 +211,36 @@ function getSelectedPictureIndexFromURL({ album, pictures, getPageURL }) {
   }
 }
 
-function getInitialPageTitle({ album, pictures, getPageURL }) {
-  let selectedPictureIndex = getSelectedPictureIndexFromURL({ album, pictures, getPageURL });
-  if (selectedPictureIndex != null) {
-    return pictures[selectedPictureIndex].caption || `Picture ${ selectedPictureIndex + 1 }`;
-  } else {
-    return album.title;
+function getInitialPageTitle({ album, getPageURL }) {
+  if (album.pictures) {
+    let selectedPictureIndex = getSelectedPictureIndexFromURL({
+      album,
+      pictures: album.pictures,
+      getPageURL
+    });
+    if (selectedPictureIndex != null) {
+      return album.pictures[selectedPictureIndex].caption || `Picture ${ selectedPictureIndex + 1 }`;
+    }
   }
+  
+  return album.title;
 }
 
-function getOpenGraphImage({ album, parent, pictures, getPageURL }) {
-  let selectedPictureIndex = getSelectedPictureIndexFromURL({ album, pictures, getPageURL });
-  if (selectedPictureIndex != null) {
-    const picture = pictures[selectedPictureIndex];
-    return getSource({ album, picture, largestSize: true });
-  } else {
-    return getCoverPhoto({album});
+function getOpenGraphImage({ album, getPageURL }) {
+  if (album.pictures) {
+    let selectedPictureIndex = getSelectedPictureIndexFromURL({
+      album,
+      pictures: album.pictures,
+      getPageURL
+    });
+    if (selectedPictureIndex != null) {
+      const picture = album.pictures[selectedPictureIndex];
+      return getSource({ album, picture, largestSize: true });
+    }
   }
+
+  const sourceData = getCoverPicture({album});
+  return getSource({ ...sourceData, largestSize: true });
 }
 
 

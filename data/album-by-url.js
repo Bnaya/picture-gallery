@@ -4,9 +4,17 @@ import { fetchText, fetchJSON } from "../helpers/fetch.js";
 
 
 async function getAlbumJSON({ albumURI, fetch }) {
+  // console.log("getAlbumJSON: " + albumURI);
 
   // TODO: Send these requests in parallel
-  const album             = await fetchJSON({url: `/api/${albumURI}.json`, fetch});
+  let album = await fetchJSON({url: `/api/${albumURI}.json`, fetch})
+  if (!album) album = await fetchJSON({url: `/api/${albumURI}/index.json`, fetch});
+
+  // if (albumURI.indexOf("portrait") >= 0) console.log(album.uri);
+
+  if (!album) return;
+  
+  // console.log({...album, albums: album.albums ? album.albums.slice(0, 2) : null});
   const generatedPictures = await fetchJSON({url: `/pictures/${albumURI}/data.json`, fetch});
 
   return getCombinedAlbumJSON({ album, generatedPictures });
@@ -16,135 +24,121 @@ async function getAlbumStory({ albumURI, fetch }) {
   return await fetchText({url: `/api/${albumURI}.markdown`, fetch});
 }
 
-function __getAlbumData({ albumURI, urlArray, parentUrlLength, fetch, parent }) {
-  return new Promise(async (resolve, reject) => {
-    if (!parent && urlArray.length >= parentUrlLength) {
-      parent = await fetchJSON({ url: `/api/${urlArray[0]}/index.json`, fetch });
-    }
+function getAlbumData({ albumURI, parent, fetch }) {
+  // if (albumURI.indexOf("portrait") >= 0) console.log("getAlbumData: " + albumURI);
+  return new Promise((resolve, reject) => {
 
-    Promise.all([
+    const promises = [
       getAlbumJSON({ albumURI, fetch }),
       getAlbumStory({ albumURI, fetch })
-    ]).then((values) => {
-      const [album, story] = values;
-      if (!album) reject(new Error(`Couldn’t find data for album: ${albumURI}`));
+    ];
+
+    // Get the parent album’s data, if it wasn’t passed in
+    if (!parent) {
+      const paths = albumURI.split("/");
+      paths.pop();
+      const parentURI = paths.join("/");
+      promises.push(fetchJSON({
+        url: parentURI == ""
+              ? `/api/index.json`
+              : `/api/${parentURI}/index.json`,
+        fetch
+      }));
+    }
+
+    Promise.all(promises).then(async (values) => {
+      const [album, story, fetchedParent] = values;
+
+      // if (albumURI.indexOf("portrait") >= 0) console.log(album.uri);
+      if (!album) {
+        reject(new Error(`Couldn’t find data for album: ${albumURI}`));
+        return;
+      }
+      if (!parent) {
+        parent = fetchedParent;
+        if (parent) {
+          parent.uri = albumURI.split("/").slice(0, -1).join("/");
+          // if (albumURI.indexOf("portrait") >= 0) {
+          //   console.log(`album by URL: parent.uri: ${parent.uri}`);
+          // }
+        }
+      }
+
+      album.uri = albumURI;
 
       if (story) {
         album.story = story;
       }
-      if (parent) {
-        album.uri = `${parent.uri}/${album.uri}`;
+
+      if (parent && parent.uri != album.uri) {
         album.parent = parent;
+      }
+
+      // if (albumURI.indexOf("portrait") >= 0) {
+      //   console.log(`album by URL: album.uri: ${album.uri}`);
+      // }
+
+      // Replace child album URIs with data
+      // "recipes/cookies" ==> { title: "...", pictures: [...] }
+      if (album.albums) {
+        album.albums = await Promise.all(album.albums.map(
+          async childAlbumURI => await getAlbumData({
+            albumURI: album.uri === "" ? childAlbumURI : `${album.uri}/${childAlbumURI}`,
+            parent: album,
+            fetch
+          })
+        ));
       }
 
       resolve(album);
     });
+
   });
-}
-
-function getAlbumData({ albumURI, urlArray, parentUrlLength, testNumber, fetch }) {
-  // console.log("getAlbumData: " + albumURI);
-  return new Promise(async (resolve, reject) => {
-    // console.log(`Testing: /api/${albumURI}.json`)
-    let testResult = await fetchJSON({url: `/api/${albumURI}.json`, fetch});
-    if (testResult) {
-      // console.log("Test passed: " + testNumber);
-      __getAlbumData({ albumURI, urlArray, parentUrlLength, fetch })
-        .then(resolve);
-    } else {
-      const groupAlbum = await fetchJSON({url: `/api/${albumURI}/index.json`, fetch});
-      if (groupAlbum) {
-        const children = await Promise.all(groupAlbum.albums.map(
-          async (childAlbumURI) => {
-            //getAlbumJSON({ albumURI: `${groupAlbumURI}/${childAlbumURI}`});
-            return await __getAlbumData({
-              albumURI: `${groupAlbum.uri}/${childAlbumURI}`,
-              urlArray,
-              parentUrlLength,
-              fetch,
-              parent: groupAlbum
-            });
-          }
-        ));
-        resolve({
-          ...groupAlbum,
-          albums: children
-        });
-      } else {
-        // console.log("Test did not pass: " + testNumber);
-        reject();
-      }
-    }
-  });
-}
-
-function getURLArray(url) {
-  // console.log("getURLArray: " + url);
-  let urlArray;
-  // /wildflowers/7/                     ==>  ["example.com", "wildflowers", "7"]
-  // /baking/a/3/                        ==>  ["example.com", "baking", "a", "3"]
-  // /baking/a/                          ==>  ["example.com", "baking", "a"]
-  if (url.indexOf("://") < 0) {
-    urlArray = url.split("?").shift().split("/").filter(bit => bit !== "");
-  }
-  // https://example.com/wildflowers/7/  ==>  ["example.com", "wildflowers", "7"]
-  // https://example.com/baking/a/3/     ==>  ["example.com", "baking", "a", "3"]
-  // https://example.com/baking/a/       ==>  ["example.com", "baking", "a"]
-  else {
-    urlArray = url.split("://").pop().split("?").shift().split("/").filter(bit => bit !== "");
-    urlArray.shift(); // Remove the domain and port
-  }
-  // console.log(urlArray);
-  return urlArray;
-}
-
-function __getAlbumByURL({ url, fetch }) {
-  return new Promise((resolve, reject) => {
-    const urlArray = getURLArray(url);
-    const urlArrayWithoutLastItem = urlArray.slice(0, urlArray.length - 1);
-    let testNumber = 1;
-
-    // console.log("albumURI: " + urlArray.join("/"));
-
-    // The whole URL might match an album
-    // baking   ==> baking.json
-    // baking/a ==> baking/a.json
-    getAlbumData({
-      albumURI: urlArray.join("/"),
-      urlArray,
-      parentUrlLength: 2,
-      testNumber: testNumber++,
-      fetch
-    })
-    .then(resolve)
-
-    // Or part of the URL might match an album (picture details page)
-    // baking/3   ==> baking.json
-    // baking/a/3 ==> baking/a.json
-    .catch(() => {
-      if (urlArray.length >= 2) {
-        getAlbumData({
-          albumURI: urlArrayWithoutLastItem.join("/"),
-          urlArray,
-          parentUrlLength: 3,
-          testNumber: testNumber++,
-          fetch
-        })
-        .then(resolve)
-        .catch(() => {
-          console.error("Couldn’t find data for album");
-        });
-      }
-    });
-  })
 }
 
 async function getAlbumByURL({ url, fetch }) {
-  // console.log("getAlbumByURL: " + url);
-  return await __getAlbumByURL({ url, fetch });
+  // if (url.indexOf("portrait") >= 0) console.log("getAlbumByURL: " + url);
+  return new Promise((resolve, reject) => {
+
+    // Normalize the url
+    // 
+    //   /recipes/                             ==> recipes
+    //   /recipes/cookies/                     ==> recipes/cookies
+    //   /recipes/cookies/?test=true           ==> recipes/cookies
+    //   https://example.com/recipes/cookies/  ==> recipes/cookies
+    //
+    const albumURI = url.split("://").pop()       // protocol
+                        .replace(/^[^\/]*\//, "") // domain & leading slash
+                        .split("?").shift()       // query string
+                        .replace(/\/$/, "");      // trailing slash
+                        
+    // if (url.indexOf("portrait") >= 0) console.log("normalized albumURI: " + albumURI);
+
+    getAlbumData({ albumURI, fetch })
+      .then(resolve)
+      .catch(error => {
+        // if (url.indexOf("portrait") >= 0) console.log("catch: " + error);
+
+        // If we didn’t find album data,
+        // try again without the last bit of the URL
+        // (since the last bit might be a picture within the album)
+        // recipes/cookies/5 ==> recipes/cookies
+        const bits = albumURI.split("/");
+        if (bits.length > 1) {
+          bits.pop();
+          getAlbumByURL({ url: bits.join("/"), fetch })
+            .then(resolve)
+            .catch(reject);
+
+        } else {
+          reject(error);
+        }
+      });
+  });
 }
 
 
 export {
   getAlbumByURL
 }
+

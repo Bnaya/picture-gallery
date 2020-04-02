@@ -7,6 +7,7 @@ import { getAlbumByURL }                   from "../data/album-by-url.js";
 import { onlyUnique }                      from "../helpers/array.js";
 
 
+const HOME_PAGE = "HOME_PAGE";
 const urls = {};
 const publicURLs = {};
 
@@ -19,11 +20,25 @@ async function getAlbumNames() {
   const gallery = await getGalleryData({ fetch });
   const [albumNames, groupData] = getAlbumNamesFromPicturesFolder();
 
+  // 📚 SHIM: Add missing album names
+  // (albumNames doesn’t include parents of group ablums)
+  const names = [];
+  for (let name of albumNames) {
+    const bits = name.split("/");
+    const nextBits = [];
+    for (let bit of bits) {
+      nextBits.push(bit);
+      names.push(nextBits.join("/"));
+    }
+  }
+
   return [
-    ...albumNames,
-    ...groupData.map(group => group.uri),
+    HOME_PAGE,
+    ...names,
+    // ...albumNames,
+    // ...groupData.map(group => group.uri),
     ...gallery.albums
-  ].filter(onlyUnique);
+  ].filter(onlyUnique).sort();
 };
 
 function isPublic(album) {
@@ -34,7 +49,7 @@ function isPublic(album) {
 async function __initURLs() {
 
   async function addAlbum(album) {
-    const url = `/${album.uri}/`;
+    const url = album.uri == "" || album.uri == null ? "/" : `/${album.uri}/`;
     urls[url] = album;
     if (isPublic(album)) {
       publicURLs[url] = album;
@@ -52,10 +67,24 @@ async function __initURLs() {
   }
 
   const albumNames = await getAlbumNames();
+  console.log(albumNames);
 
   for (let name of albumNames) {
-    const url = `/${name}/`;
+    // if (name.indexOf("portrait") >= 0) {
+    //   console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+    //   console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+    //   console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+    //   console.log(`next album name: ${name}`);
+    // }
+    const url = name === HOME_PAGE ? "/" : `/${name}/`;
     const album = await getAlbumByURL({ url, fetch });
+    // console.log(`getAlbumByURL: ${url}`);
+    // if (name.indexOf("portrait") >= 0) {
+    //   console.log(`next album album.uri: ${album.uri}`);
+    //   console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+    //   console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+    //   console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+    // }
     await addAlbum(album);
   }
 

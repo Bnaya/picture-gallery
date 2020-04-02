@@ -32,7 +32,6 @@ function getAlbumHTML(url) {
 
     const title   = getInitialPageTitle({
       getPageURL,
-      pictures: album.pictures,
       album
     });
     const content = render(AlbumPage({
@@ -43,7 +42,6 @@ function getAlbumHTML(url) {
     }));
     const openGraphImage = getOpenGraphImage({
       getPageURL,
-      pictures: album.pictures,
       album
     });
 
@@ -70,14 +68,18 @@ function getGroupAlbumHTML(url) {
     // console.log("getGroupAlbumHTML");
     // console.log(url);
     const album = getAlbum(url);
+
+    // console.log("*** getAlbumHTML");
+    // console.log(url);
+    // console.log("****");
+    // console.log({...album, albums: album.albums.slice(0, 2)});
+
     // console.log(album);
     const { title, askSearchEnginesNotToIndex } = album;
     const content = render(ParentAlbumPage({ parent: album, children: album.albums }));
     const openGraphImage = getOpenGraphImage({
       getPageURL: () => url,
-      pictures: album.albums[0].pictures,
-      album: album.albums[0],
-      parent: album
+      album: album.albums[0]
     });
 
     const renderedHTML = DefaultLayout({
@@ -115,7 +117,6 @@ function getIndexHTML() {
 
     const openGraphImage = getOpenGraphImage({
       getPageURL: () => "/",
-      pictures: firstAlbum.pictures,
       album: firstAlbum
     });
 
@@ -159,17 +160,16 @@ function getSiteMapXML() {
 
 
 function getSourceByURL(url) {
+  // console.log(`getSourceByURL: ${url}`);
+  // if (url.indexOf("portrait") >= 0) console.log(`getSourceByURL: ${url}`);
   return new Promise(async (resolve, reject) => {
-    if (url === "/") {
-      getIndexHTML()
-        .then(resolve);
-    } else if (url === "/sitemap.xml") {
+    if (url === "/sitemap.xml") {
       getSiteMapXML()
         .then(resolve);
     } else if (url === "/robots.txt") {
       getRobotsText()
         .then(resolve);
-    } else if (isGroupAlbum(url)) {
+    } else if (url === "/" || isGroupAlbum(url)) {
       getGroupAlbumHTML(url)
         .then(resolve);
     } else if (isAlbum(url)) {

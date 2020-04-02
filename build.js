@@ -106,6 +106,7 @@ function buildError404Page() {
 }
 
 function build(urls) {
+  // console.log(urls);
 
   buildGallery(urls);
   buildStaticFiles();
@@ -137,7 +138,5 @@ console.log(chalk.cyan("- - - - - - - - - - - - - - - - - - - - - - -"));
 console.log("⏱️ ", chalk.cyan("Starting build"));
 console.log(chalk.cyan("- - - - - - - - - - - - - - - - - - - - - - -"));
 console.log("");
-getAlbumsByURL().then(albumURLs => {
-  build(["/", ...albumURLs]);
-});
+getAlbumsByURL().then(build);
 

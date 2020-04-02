@@ -29,7 +29,7 @@ async function start() {
     document.body
   );
 
-  // document.title = getInitialPageTitle({ getPageURL, album, pictures: album.pictures });
+  // document.title = getInitialPageTitle({ getPageURL, album });
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Document/DOMContentLoaded_event

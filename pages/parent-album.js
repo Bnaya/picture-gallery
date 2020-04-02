@@ -4,22 +4,38 @@ import   htm              from "../web_modules/htm.js";
 const    html = htm.bind(createElement);
 import { getSource,
          getSourceSet,
+         getCoverPicture,
          IMAGE_LIST_SIZES }   from "../helpers/image-source-set.js";
 
 function ParentAlbumPage({ parent, children }) {
 
+  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  console.log(parent.uri);
+  console.log(parent);
+  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+
   return html`
     <section class="picture-list picture-list__has-captions">
-      <h1>${ parent.title }</h1>
-      <p>${ parent.date }</p>
+      <h1>
+        ${ parent.title }
+        ${ (parent.parent)
+            ? html` / <a href="${parent.parent.uri == ""
+                                  ? "/"
+                                  : `/${parent.parent.uri}/` }">
+                        ${ parent.parent.title }
+                      </a>`
+            : "" }
+      </h1>
+      <p> ${ parent.date  }</p>
 
       <ol>
         ${children.map((album, index) => {
-          const match = album.pictures.filter(picture =>
-            picture.filename === album.coverPicture || 
-            picture.source   === album.coverPicture
-          );
-          const picture = match.length > 0 ? match[0] : album.pictures[0];
+          const sourceData = getCoverPicture({album});
+          const { picture } = sourceData;
 
           const sizes = (picture.width && picture.height)
             ? `(min-width: 60em) 33vw, (min-width: 30em) 50vw, 100vw`
@@ -45,9 +61,9 @@ function ParentAlbumPage({ parent, children }) {
                     src="data:image/jpeg;base64,${picture.previewBase64}" alt="" />`
                    : "" }
                 <img
-                  src="${getSource({album, picture})}"
-                  srcset="${getSourceSet({album, picture})}"
-                  sizes="${getSourceSet({album, picture}) ? sizes : null}"
+                  src="${getSource(sourceData)}"
+                  srcset="${getSourceSet(sourceData)}"
+                  sizes="${getSourceSet(sourceData) ? sizes : null}"
                   loading="lazy"
                   alt="${
                     (picture.description)

@@ -19,7 +19,6 @@ import { getPublicURLs,
 import { DefaultLayout }     from "../layouts/default.js";
 import { RobotsText }        from "../layouts/robots.txt.js";
 import { SiteMapXML }        from "../layouts/sitemap.xml.js";
-import { IndexPage }         from "../pages/index.js";
 import { AlbumPage }         from "../pages/album.js";
 import { ParentAlbumPage }   from "../pages/parent-album.js";
 
@@ -98,44 +97,6 @@ function getGroupAlbumHTML(url) {
 
     resolve(beautifiedHTML);
   });
-}
-
-function getIndexHTML() {
-  
-  return new Promise(async (resolve, reject) => {
-    
-    const gallery = await getGalleryData({ fetch });
-    const albums = gallery.albums.map(albumURI => getAlbum(`/${albumURI}/`));
-
-    const { title, askSearchEnginesNotToIndex } = gallery;
-    const content = render(IndexPage({ ...gallery, albums }));
-
-    const firstAlbum = 
-      albums[0].albums
-        ? albums[0].albums[0] // The first album might be a group album
-        : albums[0];
-
-    const openGraphImage = getOpenGraphImage({
-      getPageURL: () => "/",
-      album: firstAlbum
-    });
-
-    const beautifiedHTML = jsBeautify.html_beautify(DefaultLayout({
-      title,
-      content,
-      askSearchEnginesNotToIndex,
-      includeClientJS: false,
-      openGraphImage:
-        openGraphImage && (openGraphImage.indexOf("http") === 0 || config.host) ?
-          openGraphImage.indexOf("http") != 0 && config.host
-            ? `${config.host}${openGraphImage}`
-            : openGraphImage
-          : null
-    }));
-
-    resolve(beautifiedHTML);
-  })
-  
 }
 
 function getRobotsText() {

@@ -9,14 +9,14 @@ import { getSource,
 
 function ParentAlbumPage({ parent, children }) {
 
-  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
-  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
-  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
-  console.log(parent.uri);
-  console.log(parent);
-  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
-  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
-  console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  // console.log(parent.uri);
+  // console.log(parent);
+  // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+  // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
 
   return html`
     <section class="picture-list picture-list__has-captions">

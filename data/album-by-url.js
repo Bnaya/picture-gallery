@@ -97,7 +97,7 @@ function getAlbumData({ albumURI, parent, fetch }) {
 }
 
 async function getAlbumByURL({ url, fetch }) {
-  // if (url.indexOf("portrait") >= 0) console.log("getAlbumByURL: " + url);
+  // console.log("getAlbumByURL: " + url);
   return new Promise((resolve, reject) => {
 
     // Normalize the url
@@ -117,16 +117,18 @@ async function getAlbumByURL({ url, fetch }) {
     getAlbumData({ albumURI, fetch })
       .then(resolve)
       .catch(error => {
-        // if (url.indexOf("portrait") >= 0) console.log("catch: " + error);
+        // console.log("catch: " + error);
 
         // If we didn’t find album data,
         // try again without the last bit of the URL
         // (since the last bit might be a picture within the album)
         // recipes/cookies/5 ==> recipes/cookies
         const bits = albumURI.split("/");
+        // console.log("** bits")
+        // console.log(bits);
         if (bits.length > 1) {
           bits.pop();
-          getAlbumByURL({ url: bits.join("/"), fetch })
+          getAlbumByURL({ url: `/${bits.join("/")}/`, fetch })
             .then(resolve)
             .catch(reject);
 

@@ -1,19 +1,14 @@
 
 import { createElement }      from "../web_modules/preact.js";
 import { useRef,
-         useEffect,
-         useContext }         from "../web_modules/preact/hooks.js";
+         useEffect }          from "../web_modules/preact/hooks.js";
 import   htm                  from "../web_modules/htm.js";
 const    html = htm.bind(createElement);
 import { isBrowser,
-         usingKeyboard,
-         onKeyboardDetected } from "../helpers/environment.js";
+         usingKeyboard }      from "../helpers/environment.js";
 import { closest }            from "../helpers/closest.js";
-import { GalleryDispatch }    from "../components/picture-gallery.js";
 import { RenderedMarkdown }   from "../components/rendered-markdown.js";
-import { getSource,
-         getSourceSet,
-         IMAGE_LIST_SIZES }   from "../helpers/image-source-set.js";
+import { PictureListItem }    from "../components/picture-list-item.js";
 
 
 let getSelectedPicture = function() {
@@ -22,9 +17,14 @@ let getSelectedPicture = function() {
 
 
 function PictureList({ album, pictures, story, state }) {
-  const dispatch = useContext(GalleryDispatch);
 
   const selectedPicture = useRef(null);
+
+  getSelectedPicture = function() {
+    return selectedPicture.current;
+  }
+
+  const stateStrings = state.toStrings();
 
 
   // ⌨️ If the list view just appeared, move focus to the current selected picture
@@ -37,54 +37,19 @@ function PictureList({ album, pictures, story, state }) {
   }, [state.value, state.context.selectedPictureIndex, selectedPicture]);
 
 
-  // Scroll list photo into view, if needed
+  // Scroll the selected a picture into view, if needed
   useEffect(() => {
     if (isBrowser() &&
         state.context.selectedPictureIndex != null) {
       const picture = selectedPicture.current
-      if (picture.getBoundingClientRect().y > window.innerHeight ||
-          picture.getBoundingClientRect().y + picture.offsetHeight < 0) {
+      const above = picture.getBoundingClientRect().y + picture.offsetHeight < 0;
+      const below = picture.getBoundingClientRect().y > window.innerHeight;
+      if (above || below) {
         picture.scrollIntoView();
       }
     }
   }, [state.context.selectedPictureIndex, selectedPicture]);
 
-  
-  // 📣 Announce selection events
-  function onListImageClick(e, index) {
-
-    // 🤖 TEST: Simulate a client-side error after user interaction
-    // if (new URLSearchParams(window.location.search).get("test") === "error-after-user-interaction") {
-    //   throw "Simulating a client-side error after user interaction";
-    //   return;
-    // }
-
-    // ⌨️ If the a modifier key is pressed, let the browser handle it
-    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-
-    dispatch({ type: "PICTURE_SELECTED", selectedPictureIndex: index });
-
-    e.preventDefault();
-  }
-
-  
-  // ⌨️ 📚 SHIM: Handle the case where a list item gains focus when the list is hidden
-  //            (to avoid a hidden focus state)
-  //
-  //            A better solution might be to prevent the list from gaining focus,
-  //            ideally by removing it from the DOM.
-  function onListImageFocus(e) {
-    if (state.matches("showing_details")) {
-      dispatch({ type: "DETAILS_CLOSED" });
-    }
-  }
-
-
-  getSelectedPicture = function() {
-    return selectedPicture.current;
-  }
-
-  const stateStrings = state.toStrings();
 
   return html`
     <section class="picture-list"
@@ -105,52 +70,19 @@ function PictureList({ album, pictures, story, state }) {
 
       <ol>
         ${pictures.map((picture, index) => {
-
-          const sizes = (picture.width && picture.height)
-            ? `(min-width: 30em) 50vw, 100vw`
-            : `100vw`;
+          const options = {
+            album,
+            picture,
+            selected: (state.context.selectedPictureIndex === index),
+            selectedPictureReference: selectedPicture,
+            index,
+            state,
+            linkURL: `/${album.uri}/${picture.uri}/`
+          };
 
           return html`
-          <li key="${picture.uri}">
-            <a href="/${album.uri}/${picture.uri}/"
-               onClick="${ e => onListImageClick(e, index) }"
-               onKeyUp="${onKeyboardDetected}"
-               onFocus="${onListImageFocus}">
-              <responsive-image
-                aspect-ratio="${
-                  (picture.width && picture.height)
-                  ? `${picture.width}/${picture.height}`
-                  : "1/1"
-                }"
-                max-width="100%"
-                max-height="100%"
-                ref="${state.context.selectedPictureIndex === index ? selectedPicture : null}">
-                ${ (picture.previewBase64)
-                   ? html`
-                  <img
-                    class="preview"
-                    width="${ 320 * (picture.width  > picture.height ? 1 : picture.width/picture.height) }"
-                    height="${320 * (picture.height > picture.width  ? 1 : picture.height/picture.width) }"
-                    src="data:image/jpeg;base64,${picture.previewBase64}" alt="" />`
-                   : "" }
-                <img src="${getSource({album, picture})}"
-                     srcset="${getSourceSet({album, picture})}"
-                     sizes="${getSourceSet({album, picture}) ? sizes : null}"
-                     width="${ 320 * (picture.width  > picture.height ? 1 : picture.width/picture.height) }"
-                     height="${320 * (picture.height > picture.width  ? 1 : picture.height/picture.width) }"
-                     data-style="background-color: ${ picture.primaryColor ||"unset" }"
-                     loading="lazy"
-                     alt="${
-                       (picture.description)
-                       ? picture.description
-                       : `Picture ${index + 1}`
-                     }"
-                     data-selected="${(state.context.selectedPictureIndex === index) ? "true" : ""}" />
-              </responsive-image>
-              ${""/*<span class="caption">${ picture.title }</span>*/}
-            </a>
-          </li>
-          `
+            <${PictureListItem} ...${options} />
+          `;
         })}
       </ol>
 

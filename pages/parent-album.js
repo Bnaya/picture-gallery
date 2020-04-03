@@ -7,7 +7,10 @@ import { getSource,
          getCoverPicture,
          IMAGE_LIST_SIZES }   from "../helpers/image-source-set.js";
 
+import { PictureGallery } from "../components/picture-gallery.js";
+
 function ParentAlbumPage({ album }) {
+//function ParentAlbumPage({ album, pictures, story, getPageURL }) {
 
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
@@ -17,6 +20,16 @@ function ParentAlbumPage({ album }) {
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
   // console.log("- - - - - - - - - - - - - - - - - - - - - - - - -");
+
+  // if (!pictures) pictures = [];
+  // 
+  // return html`
+  //   <${PictureGallery}
+  //     album="${album}"
+  //     pictures="${pictures}"
+  //     story="${story}"
+  //     getPageURL="${getPageURL}" />
+  // `;
 
   return html`
     <section class="picture-list picture-list__has-captions">
